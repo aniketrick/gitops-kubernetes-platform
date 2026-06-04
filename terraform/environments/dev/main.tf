@@ -49,24 +49,19 @@ resource "kind_cluster" "gitops" {
   }
 }
 
-data "kind_cluster" "gitops" {
-  name       = kind_cluster.gitops.name
-  depends_on = [kind_cluster.gitops]
-}
-
 provider "kubernetes" {
-  host                   = data.kind_cluster.gitops.endpoint
-  client_certificate     = data.kind_cluster.gitops.client_certificate
-  client_key             = data.kind_cluster.gitops.client_key
-  cluster_ca_certificate = data.kind_cluster.gitops.cluster_ca_certificate
+  host                   = kind_cluster.gitops.endpoint
+  client_certificate     = kind_cluster.gitops.client_certificate
+  client_key             = kind_cluster.gitops.client_key
+  cluster_ca_certificate = kind_cluster.gitops.cluster_ca_certificate
 }
 
 provider "helm" {
   kubernetes {
-    host                   = data.kind_cluster.gitops.endpoint
-    client_certificate     = data.kind_cluster.gitops.client_certificate
-    client_key             = data.kind_cluster.gitops.client_key
-    cluster_ca_certificate = data.kind_cluster.gitops.cluster_ca_certificate
+    host                   = kind_cluster.gitops.endpoint
+    client_certificate     = kind_cluster.gitops.client_certificate
+    client_key             = kind_cluster.gitops.client_key
+    cluster_ca_certificate = kind_cluster.gitops.cluster_ca_certificate
   }
 }
 
@@ -74,12 +69,16 @@ resource "kubernetes_namespace" "argocd" {
   metadata {
     name = "argocd"
   }
+
+  depends_on = [kind_cluster.gitops]
 }
 
 resource "kubernetes_namespace" "portfolio_api" {
   metadata {
     name = "portfolio-api"
   }
+
+  depends_on = [kind_cluster.gitops]
 }
 
 resource "helm_release" "nginx_ingress" {
